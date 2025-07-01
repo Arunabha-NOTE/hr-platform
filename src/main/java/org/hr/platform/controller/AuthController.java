@@ -3,9 +3,11 @@ package org.hr.platform.controller;
 import lombok.RequiredArgsConstructor;
 import org.hr.platform.dto.AuthResponse;
 import org.hr.platform.dto.LoginRequest;
-import org.hr.platform.dto.RegisterRequest;
+import org.hr.platform.dto.CreateUserRequest;
+import org.hr.platform.model.User;
 import org.hr.platform.service.AuthService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,8 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
     private final AuthService authService;
 
-    @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@RequestBody RegisterRequest request) {
+    @PostMapping("/create_user")
+    public ResponseEntity<AuthResponse> register(@RequestBody CreateUserRequest request, @AuthenticationPrincipal User admin) {
         return ResponseEntity.ok(authService.register(request));
     }
 

@@ -4,7 +4,7 @@ import lombok.Data;
 import org.hr.platform.enums.Role;
 
 @Data
-public class RegisterRequest {
+public class CreateUserRequest {
     private String email;
     private String password;
     private String organizationName;
