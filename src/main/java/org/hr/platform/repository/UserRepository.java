@@ -1,6 +1,6 @@
-package repository;
+package org.hr.platform.repository;
 
-import model.User;
+import org.hr.platform.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

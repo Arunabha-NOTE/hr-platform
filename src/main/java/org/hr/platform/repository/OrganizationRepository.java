@@ -1,6 +1,6 @@
-package repository;
+package org.hr.platform.repository;
 
-import model.Organization;
+import org.hr.platform.model.Organization;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

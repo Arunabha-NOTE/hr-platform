@@ -1,4 +1,4 @@
-package model;
+package org.hr.platform.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
