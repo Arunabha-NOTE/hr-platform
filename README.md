@@ -19,6 +19,30 @@ A secure multi-tenant HR platform backend that supports organization-based acces
 
 ---
 
+## ⚙️ Architecture Overview
+
+          [ Next.js Frontend ]
+                  │
+                  ▼
+        Add commentMore actions
+    [Spring Boot Backend API (hrplatform)]
+                  │
+        ┌─────────▼──────────┐
+        │   Controller Layer │
+        └─────────┬──────────┘
+                  ▼
+        ┌─────────▼──────────┐
+        │    Service Layer   │
+        └─────────┬──────────┘
+                  ▼
+        ┌─────────▼──────────┐
+        │ Data Access Layer  │
+        └─────────┬──────────┘
+                  ▼
+       [ PostgreSQL @ NeonDB ]
+
+---
+
 ## 📁 Project Structure
 
 ```
@@ -151,23 +175,3 @@ spring.jpa.show-sql=true
 jwt.secret=${JWT_SECRET}
 jwt.expiration=${JWT_EXPIRATION}
 ```
-
-🚧 To Do (Later Phases)
-Add @PreAuthorize annotations for finer control
-
-Create dashboard views per role (Admins see all users, Managers see employees, etc.)
-
-Add audit logging (optional)
-
-Add organization-level dashboard for SuperAdmin (optional)
-
-🧠 Design Decisions
-Layered architecture: controller ↔ service ↔ repository
-
-All users are scoped to one organization
-
-JWT-based stateless session with embedded org/role claims
-
-No account self-signup: Admin-only user creation for tight org boundaries
-
-SuperAdmin is hardcoded/test-only for bootstrapping
