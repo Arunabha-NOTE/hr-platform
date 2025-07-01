@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hr.platform.enums.Role;
 
 @Entity
 @Table(name = "users")
@@ -13,12 +14,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class User {
-
-    public enum Role{
-        ADMIN,
-        MANAGER,
-        EMPLOYEE,
-    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
