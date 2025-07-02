@@ -88,8 +88,6 @@ const UserManagementPage = () => {
       ]);
       setUsers(usersData);
       setOrganizations(orgsData);
-        console.log('Fetched users:', usersData);
-        console.log('Fetched organizations:', orgsData);
     } catch (error) {
       console.error('Failed to fetch data:', error);
       setError('Failed to load data. Please try again.');
@@ -114,7 +112,7 @@ const UserManagementPage = () => {
     try {
       setSubmitting(true);
       setError('');
-      const newUser = await userApi.create({
+      await userApi.create({
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
@@ -122,9 +120,9 @@ const UserManagementPage = () => {
         role: formData.role,
         organizationId: formData.organizationId
       });
-      setUsers([...users, newUser]);
       setIsAddDialogOpen(false);
       resetForm();
+      await fetchData(); // Reload table data
     } catch (error: any) {
       console.error('Error creating user:', error);
       let errorMessage = 'Failed to create user.';
@@ -152,16 +150,16 @@ const UserManagementPage = () => {
     try {
       setSubmitting(true);
       setError('');
-      const updatedUser = await userApi.update(selectedUser.id, {
+      await userApi.update(selectedUser.id, {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
         role: formData.role,
         active: formData.active
       });
-      setUsers(users.map(user => user.id === selectedUser.id ? updatedUser : user));
       setIsEditDialogOpen(false);
       resetForm();
+      await fetchData(); // Reload table data
     } catch (error: any) {
       console.error('Error updating user:', error);
       let errorMessage = 'Failed to update user.';
@@ -186,9 +184,9 @@ const UserManagementPage = () => {
     try {
       setSubmitting(true);
       await userApi.delete(selectedUser.id);
-      setUsers(users.filter(user => user.id !== selectedUser.id));
       setIsDeleteDialogOpen(false);
       setSelectedUser(null);
+      await fetchData(); // Reload table data
     } catch (error) {
       setError('Failed to delete user.');
     } finally {
@@ -199,13 +197,13 @@ const UserManagementPage = () => {
   const openEditDialog = (user: User) => {
     setSelectedUser(user);
     setFormData({
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      password: '', // Add password field for consistency
-      role: user.role,
-      organizationId: user.organization.id,
-      active: user.active
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
+      email: user.email || '',
+      password: '', // Always empty for edit
+      role: user.role || '',
+      organizationId: user.organization?.id || 0,
+      active: user.active ?? true
     });
     setIsEditDialogOpen(true);
   };
@@ -301,7 +299,6 @@ const UserManagementPage = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Name</TableHead>
                       <TableHead>Email</TableHead>
                       <TableHead>Role</TableHead>
                       <TableHead>Organization</TableHead>
@@ -310,15 +307,12 @@ const UserManagementPage = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredUsers.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell className="font-medium">
-                          {user.firstName} {user.lastName}
-                        </TableCell>
-                        <TableCell>{user.email}</TableCell>
+                    {filteredUsers.map((user, index) => (
+                      <TableRow key={user.id || `user-${index}`}>
+                        <TableCell className="font-medium">{user.email}</TableCell>
                         <TableCell>
                           <Badge variant={getRoleBadgeVariant(user.role)}>
-                            {user.role.replace('_', ' ')}
+                            {(user.role || '').replace('_', ' ')}
                           </Badge>
                         </TableCell>
                         <TableCell>{user.organization?.name || 'No Organization'}</TableCell>
