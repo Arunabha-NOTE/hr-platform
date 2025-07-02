@@ -1,41 +1,96 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '../../../contexts/AuthContext';
-import { RoleProtectedRoute } from '../../../components/RoleProtectedRoute';
-import { Role } from '../../types/enums/enums';
-import { LogOut, Shield, Users, Settings, BarChart3, Database, UserCog, Globe } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "../../../contexts/AuthContext";
+import { RoleProtectedRoute } from "../../../components/RoleProtectedRoute";
+import { Role } from "../../types/enums/enums";
+import {
+  LogOut,
+  Shield,
+  Users,
+  UserCog,
+  Globe,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Skeleton } from "@/components/ui/skeleton";
+import { statsApi } from "../../../lib/api";
 
 const SuperAdminDashboard = () => {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalOrganizations: 0,
+    activeUsers: 0,
+    activeOrganizations: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const dashboardStats = await statsApi.getDashboardStats();
+        setStats(dashboardStats);
+      } catch (error) {
+        console.error("Failed to fetch dashboard stats:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
 
   const handleLogout = () => {
     logout();
-    router.push('/login');
+    router.push("/login");
   };
 
-  const stats = [
-    { title: "Total Users", value: "1,234", icon: Users, trend: "+12%" },
-    { title: "Organizations", value: "45", icon: Globe, trend: "+3%" },
-    { title: "System Health", value: "Healthy", icon: Database, trend: "99.9%" },
-    { title: "Active Sessions", value: "89", icon: BarChart3, trend: "+5%" },
+  const statsData = [
+    {
+      title: "Total Users",
+      value: loading ? "..." : stats.totalUsers.toString(),
+      icon: Users,
+      description: `${stats.activeUsers} active users`,
+    },
+    {
+      title: "Total Organizations",
+      value: loading ? "..." : stats.totalOrganizations.toString(),
+      icon: Globe,
+      description: `${stats.activeOrganizations} active organizations`,
+    },
   ];
 
-  const actionCards = [
-    { title: "User Management", description: "Manage all system users, roles, and permissions", icon: UserCog },
-    { title: "Organizations", description: "Manage organizations and their configurations", icon: Globe },
-    { title: "System Settings", description: "Configure system-wide settings and preferences", icon: Settings },
-    { title: "Analytics", description: "View system analytics and performance metrics", icon: BarChart3 },
-    { title: "System Health", description: "Monitor system health and performance", icon: Database },
-    { title: "Security", description: "Manage security settings and audit logs", icon: Shield },
+  const managementCards = [
+    {
+      title: "Manage Users",
+      description: "Add, edit, and manage all system users and their roles",
+      icon: UserCog,
+      route: "/dashboard/super-admin/users",
+    },
+    {
+      title: "Manage Organizations",
+      description: "Create and manage organizations and their configurations",
+      icon: Globe,
+      route: "/dashboard/super-admin/organizations",
+    },
   ];
 
   return (
@@ -68,7 +123,9 @@ const SuperAdminDashboard = () => {
                     <div className="flex items-center justify-start gap-2 p-2">
                       <div className="flex flex-col space-y-1 leading-none">
                         <p className="font-medium">{user?.sub}</p>
-                        <p className="text-xs text-muted-foreground">Super Administrator</p>
+                        <p className="text-xs text-muted-foreground">
+                          Super Administrator
+                        </p>
                       </div>
                     </div>
                     <DropdownMenuSeparator />
@@ -88,15 +145,17 @@ const SuperAdminDashboard = () => {
           <div className="space-y-8">
             {/* Page Header */}
             <div>
-              <h2 className="text-3xl font-bold tracking-tight">System Administration</h2>
+              <h2 className="text-3xl font-bold tracking-tight">
+                System Administration
+              </h2>
               <p className="text-muted-foreground">
-                Manage the entire HR platform system, users, and configurations
+                Manage the entire HR platform system, users, and organizations
               </p>
             </div>
 
             {/* Stats Grid */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {stats.map((stat, index) => {
+            <div className="grid gap-4 md:grid-cols-2">
+              {statsData.map((stat, index) => {
                 const IconComponent = stat.icon;
                 return (
                   <Card key={index}>
@@ -105,21 +164,30 @@ const SuperAdminDashboard = () => {
                       <IconComponent className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">{stat.value}</div>
-                      <p className="text-xs text-muted-foreground">
-                        <span className="text-green-600">{stat.trend}</span> from last month
-                      </p>
+                      {loading ? (
+                        <div className="space-y-2">
+                          <Skeleton className="h-8 w-16" />
+                          <Skeleton className="h-4 w-24" />
+                        </div>
+                      ) : (
+                        <>
+                          <div className="text-2xl font-bold">{stat.value}</div>
+                          <p className="text-xs text-muted-foreground">
+                            {stat.description}
+                          </p>
+                        </>
+                      )}
                     </CardContent>
                   </Card>
                 );
               })}
             </div>
 
-            {/* Action Cards */}
+            {/* Management Cards */}
             <div>
-              <h3 className="text-xl font-semibold mb-4">Quick Actions</h3>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {actionCards.map((card, index) => {
+              <h3 className="text-xl font-semibold mb-4">System Management</h3>
+              <div className="grid gap-4 md:grid-cols-2">
+                {managementCards.map((card, index) => {
                   const IconComponent = card.icon;
                   return (
                     <Card key={index} className="cursor-pointer transition-all hover:shadow-md">
@@ -130,9 +198,16 @@ const SuperAdminDashboard = () => {
                         </div>
                       </CardHeader>
                       <CardContent>
-                        <CardDescription className="mb-4">{card.description}</CardDescription>
-                        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
-                          Manage →
+                        <CardDescription className="mb-4">
+                          {card.description}
+                        </CardDescription>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => router.push(card.route)}
+                        >
+                          Open Management →
                         </Button>
                       </CardContent>
                     </Card>
