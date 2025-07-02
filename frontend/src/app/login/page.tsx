@@ -57,7 +57,7 @@ const LoginPage = () => {
     }
   }, [isAuthenticated, user, router]);
 
-  const getRoleDashboardRoute = (role: Role): string => {
+  const getRoleDashboardRoute = (role: Role | string): string => {
     switch (role) {
       case Role.SUPER_ADMIN:
         return '/dashboard/super-admin';
@@ -115,14 +115,15 @@ const LoginPage = () => {
         <div className="bg-white rounded-xl shadow-xl p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4 text-center">Select Your Role</h3>
           <div className="grid grid-cols-2 gap-3 mb-6">
-            {Object.entries(roleConfigs).map(([role, config]) => {
+            {Object.entries(roleConfigs).map(([roleKey, config]) => {
+              const role = roleKey as Role; // Cast the string key to Role enum
               const IconComponent = config.icon;
               const isSelected = selectedRole === role;
               return (
                 <button
-                  key={role}
+                  key={roleKey}
                   type="button"
-                  onClick={() => handleRoleSelect(role as Role)}
+                  onClick={() => handleRoleSelect(role)}
                   className={`
                     p-3 rounded-lg border-2 transition-all duration-200 text-center
                     ${isSelected 
