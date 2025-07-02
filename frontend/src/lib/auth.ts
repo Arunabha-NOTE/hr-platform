@@ -16,9 +16,10 @@ export interface TokenResponse {
 
 export interface DecodedToken {
   sub: string;
-  role: Role;
+  role: Role | string; // Allow both enum and string
   exp: number;
   iat: number;
+  userType?: string; // Add userType for SuperAdmin distinction
 }
 
 class AuthService {
@@ -100,7 +101,29 @@ class AuthService {
     if (!token) return null;
 
     try {
-      return jwtDecode<DecodedToken>(token);
+      const decoded = jwtDecode<any>(token);
+
+      // Handle role mapping from backend
+      let role: Role;
+      if (decoded.role === 'SUPERADMIN' || decoded.userType === 'SUPERADMIN') {
+        role = Role.SUPER_ADMIN;
+      } else if (decoded.role === 'ADMIN') {
+        role = Role.ADMIN;
+      } else if (decoded.role === 'MANAGER') {
+        role = Role.MANAGER;
+      } else if (decoded.role === 'EMPLOYEE') {
+        role = Role.EMPLOYEE;
+      } else {
+        role = decoded.role as Role;
+      }
+
+      return {
+        sub: decoded.sub,
+        role: role,
+        exp: decoded.exp,
+        iat: decoded.iat,
+        userType: decoded.userType
+      };
     } catch {
       return null;
     }

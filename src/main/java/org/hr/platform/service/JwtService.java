@@ -3,6 +3,7 @@ package org.hr.platform.service;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.hr.platform.enums.Role;
 import org.hr.platform.model.SuperAdmin;
 import org.hr.platform.model.User;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,7 +39,7 @@ public class JwtService {
         return Jwts.builder()
                 .setSubject(superAdmin.getEmail())
                 .claim("superAdminId", superAdmin.getId())
-                .claim("role", "SUPERADMIN")
+                .claim("role", Role.SUPER_ADMIN.name()) // Use enum instead of hardcoded string
                 .claim("userType", "SUPERADMIN")
                 .claim("firstLogin", superAdmin.isFirstLogin())
                 .setIssuedAt(new Date())
