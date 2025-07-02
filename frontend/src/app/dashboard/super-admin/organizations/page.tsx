@@ -441,7 +441,7 @@ const OrganizationManagementPage = () => {
               <DialogDescription>
                 Are you sure you want to delete "{selectedOrganization?.name}"?
                 This action cannot be undone.
-                {selectedOrganization?.userCount > 0 && (
+                {(selectedOrganization?.userCount ?? 0) > 0 && (
                   <span className="block mt-2 text-destructive">
                     Warning: This organization has {selectedOrganization.userCount} users.
                     Please reassign or remove users before deleting.
