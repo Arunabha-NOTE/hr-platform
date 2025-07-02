@@ -299,7 +299,7 @@ const OrganizationManagementPage = () => {
                               <DropdownMenuItem
                                 onClick={() => openDeleteDialog(organization)}
                                 className="text-destructive"
-                                disabled={organization.userCount > 0}
+                                disabled={(organization.userCount ?? 0) > 0}
                               >
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Delete
