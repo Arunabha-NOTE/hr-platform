@@ -5,6 +5,14 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
 import { Eye, EyeOff, Lock, Mail, AlertCircle, Shield, Users, UserCheck, User } from 'lucide-react';
 import { Role } from '../types/enums/enums';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -22,36 +30,31 @@ const LoginPage = () => {
     [Role.SUPER_ADMIN]: {
       label: 'Super Admin',
       icon: Shield,
-      color: 'bg-red-600 text-white border-red-600',
-      hoverColor: 'hover:bg-red-700',
+      color: 'destructive',
       description: 'System Administrator'
     },
     [Role.ADMIN]: {
       label: 'Admin',
       icon: Users,
-      color: 'bg-purple-600 text-white border-purple-600',
-      hoverColor: 'hover:bg-purple-700',
+      color: 'secondary',
       description: 'Organization Administrator'
     },
     [Role.MANAGER]: {
       label: 'Manager',
       icon: UserCheck,
-      color: 'bg-blue-600 text-white border-blue-600',
-      hoverColor: 'hover:bg-blue-700',
+      color: 'default',
       description: 'Team Manager'
     },
     [Role.EMPLOYEE]: {
       label: 'Employee',
       icon: User,
-      color: 'bg-green-600 text-white border-green-600',
-      hoverColor: 'hover:bg-green-700',
+      color: 'outline',
       description: 'Team Member'
     }
   };
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      // Redirect based on user role
       const dashboardRoute = getRoleDashboardRoute(user.role);
       router.push(dashboardRoute);
     }
@@ -81,7 +84,6 @@ const LoginPage = () => {
       console.log('Attempting login with:', { email, password: '***', selectedRole });
       await login(email, password);
       console.log('Login successful, redirecting...');
-      // Redirect will be handled by useEffect when user state updates
     } catch (err) {
       console.error('Login error:', err);
       setError('Invalid email or password. Please try again.');
@@ -90,173 +92,142 @@ const LoginPage = () => {
     }
   };
 
-  const handleRoleSelect = (role: Role) => {
-    setSelectedRole(role);
-    setError(''); // Clear any existing errors when switching roles
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="max-w-lg w-full space-y-8">
+      <div className="w-full max-w-lg space-y-6">
         {/* Header */}
-        <div className="text-center">
-          <div className="mx-auto h-12 w-12 bg-blue-600 rounded-full flex items-center justify-center">
-            <Lock className="h-6 w-6 text-white" />
+        <div className="text-center space-y-2">
+          <div className="mx-auto h-12 w-12 bg-primary rounded-full flex items-center justify-center">
+            <Lock className="h-6 w-6 text-primary-foreground" />
           </div>
-          <h2 className="mt-6 text-3xl font-bold text-gray-900">
-            Sign in to your account
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Welcome back to HR Platform
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">Sign in to your account</h1>
+          <p className="text-muted-foreground">Welcome back to HR Platform</p>
         </div>
 
-        {/* Role Selection Tabs */}
-        <div className="bg-white rounded-xl shadow-xl p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4 text-center">Select Your Role</h3>
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            {Object.entries(roleConfigs).map(([roleKey, config]) => {
-              const role = roleKey as Role; // Cast the string key to Role enum
-              const IconComponent = config.icon;
-              const isSelected = selectedRole === role;
-              return (
-                <button
-                  key={roleKey}
-                  type="button"
-                  onClick={() => handleRoleSelect(role)}
-                  className={`
-                    p-3 rounded-lg border-2 transition-all duration-200 text-center
-                    ${isSelected 
-                      ? config.color 
-                      : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
-                    }
-                    ${isSelected ? config.hoverColor : 'hover:bg-gray-50'}
-                  `}
-                >
-                  <IconComponent className={`h-6 w-6 mx-auto mb-2 ${isSelected ? 'text-white' : 'text-gray-400'}`} />
-                  <div className="text-sm font-medium">{config.label}</div>
-                  <div className={`text-xs mt-1 ${isSelected ? 'text-white opacity-90' : 'text-gray-500'}`}>
-                    {config.description}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Login Form */}
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* Error Message */}
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start space-x-3">
-                <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
-                <div className="text-sm text-red-700">{error}</div>
-              </div>
-            )}
-
-            {/* Selected Role Indicator */}
-            <div className="bg-gray-50 rounded-lg p-3 flex items-center space-x-3">
-              <div className={`p-2 rounded-full ${roleConfigs[selectedRole].color}`}>
-                {React.createElement(roleConfigs[selectedRole].icon, { className: "h-4 w-4" })}
-              </div>
-              <div>
-                <div className="text-sm font-medium text-gray-900">
-                  Signing in as {roleConfigs[selectedRole].label}
-                </div>
-                <div className="text-xs text-gray-500">
-                  {roleConfigs[selectedRole].description}
-                </div>
-              </div>
+        {/* Main Login Card */}
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle>Select Your Role</CardTitle>
+            <CardDescription>Choose your role to continue</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Role Selection */}
+            <div className="grid grid-cols-2 gap-3">
+              {Object.entries(roleConfigs).map(([roleKey, config]) => {
+                const role = roleKey as Role;
+                const IconComponent = config.icon;
+                const isSelected = selectedRole === role;
+                return (
+                  <Button
+                    key={roleKey}
+                    type="button"
+                    variant={isSelected ? "default" : "outline"}
+                    className={cn(
+                      "h-auto p-4 flex-col space-y-2",
+                      isSelected && "ring-2 ring-primary ring-offset-2"
+                    )}
+                    onClick={() => setSelectedRole(role)}
+                  >
+                    <IconComponent className="h-6 w-6" />
+                    <div className="text-center">
+                      <div className="font-medium">{config.label}</div>
+                      <div className="text-xs opacity-70">{config.description}</div>
+                    </div>
+                  </Button>
+                );
+              })}
             </div>
 
-            {/* Email Field */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email address
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
+            {/* Selected Role Badge */}
+            <div className="flex items-center space-x-2 p-3 bg-muted rounded-lg">
+              <Badge variant={roleConfigs[selectedRole].color as any}>
+                {React.createElement(roleConfigs[selectedRole].icon, { className: "h-4 w-4 mr-1" })}
+                {roleConfigs[selectedRole].label}
+              </Badge>
+              <span className="text-sm text-muted-foreground">
+                {roleConfigs[selectedRole].description}
+              </span>
             </div>
 
-            {/* Password Field */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="current-password"
-                  required
-                  className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                  ) : (
-                    <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                  )}
-                </button>
-              </div>
-            </div>
+            {/* Login Form */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Error Alert */}
+              {error && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
 
-            {/* Submit Button */}
-            <div>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className={`
-                  group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white 
-                  ${roleConfigs[selectedRole].color.replace('text-white border-', 'bg-').replace(' text-white', '')} 
-                  ${roleConfigs[selectedRole].hoverColor} 
-                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors
-                `}
-              >
+              {/* Email Field */}
+              <div className="space-y-2">
+                <Label htmlFor="email">Email address</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-9"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Password Field */}
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-9 pr-9"
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (
-                  <div className="flex items-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  <>
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
                     Signing in...
-                  </div>
+                  </>
                 ) : (
                   `Sign in as ${roleConfigs[selectedRole].label}`
                 )}
-              </button>
-            </div>
-          </form>
-        </div>
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
 
         {/* Footer */}
         <div className="text-center">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             Having trouble signing in?{' '}
-            <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+            <Button variant="link" className="p-0 h-auto font-medium">
               Contact support
-            </a>
+            </Button>
           </p>
         </div>
       </div>

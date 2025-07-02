@@ -4,6 +4,10 @@ import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { Role } from '../app/types/enums/enums';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ShieldX } from 'lucide-react';
 
 interface RoleProtectedRouteProps {
   children: React.ReactNode;
@@ -27,7 +31,6 @@ export const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({
       }
 
       if (user && !allowedRoles.includes(user.role as Role)) {
-        // Redirect to user's appropriate dashboard based on their role
         const userDashboard = getUserDashboardRoute(user.role as Role);
         if (redirectTo) {
           router.push(redirectTo);
@@ -56,7 +59,13 @@ export const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <Card className="w-96">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            <CardTitle>Loading...</CardTitle>
+            <CardDescription>Please wait while we verify your access</CardDescription>
+          </CardHeader>
+        </Card>
       </div>
     );
   }
@@ -67,12 +76,29 @@ export const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({
 
   if (user && !allowedRoles.includes(user.role as Role)) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h2>
-          <p className="text-gray-600 mb-4">You don't have permission to access this page.</p>
-          <p className="text-sm text-gray-500">Redirecting to your dashboard...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <ShieldX className="mx-auto h-12 w-12 text-destructive mb-4" />
+            <CardTitle className="text-destructive">Access Denied</CardTitle>
+            <CardDescription>
+              You don't have permission to access this page.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <Alert className="mb-4">
+              <AlertDescription>
+                Redirecting you to your dashboard...
+              </AlertDescription>
+            </Alert>
+            <Button
+              onClick={() => router.push(getUserDashboardRoute(user.role as Role))}
+              className="w-full"
+            >
+              Go to My Dashboard
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
