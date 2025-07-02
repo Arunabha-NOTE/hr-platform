@@ -1,33 +1,12 @@
-# ---- Build Stage ----
-FROM gradle:8.5.0-jdk21 AS builder
+# Stage 1: Build the application
+FROM gradle:8.4.0-jdk21 AS build
 WORKDIR /app
+COPY . .
+RUN gradle bootJar --no-daemon
 
-# Optional: cache Gradle dependencies
-ENV GRADLE_USER_HOME=/home/gradle/.gradle
-
-# Copy only Gradle wrapper and build files first
-COPY platform/build.gradle platform/settings.gradle ./
-COPY platform/gradle ./gradle
-COPY platform/gradlew ./gradlew
-
-# Let it download dependencies (caching layer)
-RUN ./gradlew build -x test || true
-
-# Copy the rest of the project
-COPY platform/. .
-
-# Build the Spring Boot app
-RUN ./gradlew clean build -x test
-
-# ---- Run Stage ----
-FROM eclipse-temurin:21-jdk
+# Stage 2: Run the application
+FROM eclipse-temurin:21-jre
 WORKDIR /app
-
-# Copy the JAR from the build stage
-COPY --from=builder /app/build/libs/*.jar app.jar
-
-# Expose the port (if needed by Coolify)
+COPY --from=build /app/build/libs/*.jar app.jar
 EXPOSE 8080
-
-# Run the app
 ENTRYPOINT ["java", "-jar", "app.jar"]
