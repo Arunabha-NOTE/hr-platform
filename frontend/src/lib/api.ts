@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { authService } from './auth';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://your-actual-backend-url.com';
 
 // API client with auth headers
 const apiClient = axios.create({
@@ -36,6 +36,7 @@ export interface CreateUserRequest {
   firstName: string;
   lastName: string;
   email: string;
+  password: string;
   role: string;
   organizationId: number;
 }

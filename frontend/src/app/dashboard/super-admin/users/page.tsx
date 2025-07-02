@@ -67,6 +67,7 @@ const UserManagementPage = () => {
     firstName: '',
     lastName: '',
     email: '',
+    password: '',
     role: '',
     organizationId: 0,
     active: true
@@ -87,6 +88,8 @@ const UserManagementPage = () => {
       ]);
       setUsers(usersData);
       setOrganizations(orgsData);
+        console.log('Fetched users:', usersData);
+        console.log('Fetched organizations:', orgsData);
     } catch (error) {
       console.error('Failed to fetch data:', error);
       setError('Failed to load data. Please try again.');
@@ -96,14 +99,14 @@ const UserManagementPage = () => {
   };
 
   const filteredUsers = users.filter(user =>
-    user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.organization.name.toLowerCase().includes(searchTerm.toLowerCase())
+    (user.firstName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (user.lastName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (user.email?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (user.organization?.name?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
   const handleAddUser = async () => {
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.role || !formData.organizationId) {
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.role || !formData.organizationId) {
       setError('All fields are required');
       return;
     }
@@ -115,14 +118,26 @@ const UserManagementPage = () => {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
+        password: formData.password,
         role: formData.role,
         organizationId: formData.organizationId
       });
       setUsers([...users, newUser]);
       setIsAddDialogOpen(false);
       resetForm();
-    } catch (error) {
-      setError('Failed to create user. Email might already exist.');
+    } catch (error: any) {
+      console.error('Error creating user:', error);
+      let errorMessage = 'Failed to create user.';
+
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data) {
+        errorMessage = typeof error.response.data === 'string' ? error.response.data : errorMessage;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      setError(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -147,8 +162,19 @@ const UserManagementPage = () => {
       setUsers(users.map(user => user.id === selectedUser.id ? updatedUser : user));
       setIsEditDialogOpen(false);
       resetForm();
-    } catch (error) {
-      setError('Failed to update user.');
+    } catch (error: any) {
+      console.error('Error updating user:', error);
+      let errorMessage = 'Failed to update user.';
+
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data) {
+        errorMessage = typeof error.response.data === 'string' ? error.response.data : errorMessage;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      setError(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -176,6 +202,7 @@ const UserManagementPage = () => {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
+      password: '', // Add password field for consistency
       role: user.role,
       organizationId: user.organization.id,
       active: user.active
@@ -193,6 +220,7 @@ const UserManagementPage = () => {
       firstName: '',
       lastName: '',
       email: '',
+      password: '',
       role: '',
       organizationId: 0,
       active: true
@@ -293,7 +321,7 @@ const UserManagementPage = () => {
                             {user.role.replace('_', ' ')}
                           </Badge>
                         </TableCell>
-                        <TableCell>{user.organization.name}</TableCell>
+                        <TableCell>{user.organization?.name || 'No Organization'}</TableCell>
                         <TableCell>
                           <Badge variant={user.active ? 'default' : 'secondary'}>
                             {user.active ? 'Active' : 'Inactive'}
@@ -387,6 +415,16 @@ const UserManagementPage = () => {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({...formData, password: e.target.value})}
+                />
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="role">Role</Label>
                 <Select value={formData.role} onValueChange={(value) => setFormData({...formData, role: value})}>
                   <SelectTrigger>
@@ -448,7 +486,80 @@ const UserManagementPage = () => {
             )}
 
             <div className="grid gap-4 py-4">
-              {/* ...similar form fields as Add Dialog but with active toggle... */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input
+                    id="firstName"
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    value={formData.lastName}
+                    onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="role">Role</Label>
+                <Select value={formData.role} onValueChange={(value) => setFormData({...formData, role: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ADMIN">Admin</SelectItem>
+                    <SelectItem value="MANAGER">Manager</SelectItem>
+                    <SelectItem value="EMPLOYEE">Employee</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="organization">Organization</Label>
+                <Select
+                  value={formData.organizationId.toString()}
+                  onValueChange={(value) => setFormData({...formData, organizationId: parseInt(value)})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select an organization" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {organizations.map((org) => (
+                      <SelectItem key={org.id} value={org.id.toString()}>
+                        {org.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="active">Active</Label>
+                <Select value={formData.active ? 'true' : 'false'} onValueChange={(value) => setFormData({...formData, active: value === 'true'})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="true">Active</SelectItem>
+                    <SelectItem value="false">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <DialogFooter>
