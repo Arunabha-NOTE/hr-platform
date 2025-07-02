@@ -463,7 +463,7 @@ const OrganizationManagementPage = () => {
               <Button
                 variant="destructive"
                 onClick={handleDeleteOrganization}
-                disabled={submitting || (selectedOrganization?.userCount > 0)}
+                disabled={submitting || ((selectedOrganization?.userCount ?? 0) > 0)}
               >
                 {submitting ? 'Deleting...' : 'Delete Organization'}
               </Button>
