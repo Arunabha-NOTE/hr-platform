@@ -443,7 +443,7 @@ const OrganizationManagementPage = () => {
                 This action cannot be undone.
                 {(selectedOrganization?.userCount ?? 0) > 0 && (
                   <span className="block mt-2 text-destructive">
-                    Warning: This organization has {selectedOrganization.userCount} users.
+                    Warning: This organization has {selectedOrganization?.userCount} users.
                     Please reassign or remove users before deleting.
                   </span>
                 )}
