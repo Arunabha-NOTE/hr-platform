@@ -3,7 +3,8 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
-import { ProtectedRoute } from '../../../components/ProtectedRoute';
+import { RoleProtectedRoute } from '../../../components/RoleProtectedRoute';
+import { Role } from '../../types/enums/enums';
 import { LogOut, User, Calendar, FileText, Clock, DollarSign, Award, Bell } from 'lucide-react';
 
 const EmployeeDashboard = () => {
@@ -16,7 +17,7 @@ const EmployeeDashboard = () => {
   };
 
   return (
-    <ProtectedRoute>
+    <RoleProtectedRoute allowedRoles={[Role.EMPLOYEE]}>
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <header className="bg-green-600 shadow-sm">
@@ -183,7 +184,7 @@ const EmployeeDashboard = () => {
           </div>
         </main>
       </div>
-    </ProtectedRoute>
+    </RoleProtectedRoute>
   );
 };
 

@@ -3,7 +3,8 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
-import { ProtectedRoute } from '../../../components/ProtectedRoute';
+import { RoleProtectedRoute } from '../../../components/RoleProtectedRoute';
+import { Role } from '../../types/enums/enums';
 import { LogOut, Users, Settings, BarChart3, UserPlus, Building, FileText, Calendar } from 'lucide-react';
 
 const AdminDashboard = () => {
@@ -16,7 +17,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <ProtectedRoute>
+    <RoleProtectedRoute allowedRoles={[Role.ADMIN]}>
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <header className="bg-purple-600 shadow-sm">
@@ -180,7 +181,7 @@ const AdminDashboard = () => {
           </div>
         </main>
       </div>
-    </ProtectedRoute>
+    </RoleProtectedRoute>
   );
 };
 
