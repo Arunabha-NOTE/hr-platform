@@ -3,6 +3,7 @@ package org.hr.platform.service;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.hr.platform.model.SuperAdmin;
 import org.hr.platform.model.User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -17,7 +18,7 @@ public class JwtService {
     private String secretKey;
 
     @Value("${jwt.expiration}")
-    private long expiration; // in milliseconds
+    private long expiration;
 
     public String generateToken(User user) {
         return Jwts.builder()
@@ -25,10 +26,41 @@ public class JwtService {
                 .claim("userId", user.getId())
                 .claim("orgId", user.getOrganization().getId())
                 .claim("role", user.getRole().name())
+                .claim("userType", "USER")
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+    public String generateTokenForSuperAdmin(SuperAdmin superAdmin) {
+        return Jwts.builder()
+                .setSubject(superAdmin.getEmail())
+                .claim("superAdminId", superAdmin.getId())
+                .claim("role", "SUPERADMIN")
+                .claim("userType", "SUPERADMIN")
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public String extractEmail(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getSubject();
+    }
+
+    public String extractUserType(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .get("userType", String.class);
     }
 
     public boolean validateToken(String token) {
@@ -41,15 +73,6 @@ public class JwtService {
         } catch (Exception e) {
             return false;
         }
-    }
-
-    public String extractEmail(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
     }
 
     private Key getSigningKey() {
