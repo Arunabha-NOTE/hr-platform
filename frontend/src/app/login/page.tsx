@@ -78,7 +78,7 @@ const LoginPage = () => {
     setIsLoading(true);
 
     try {
-      console.log('Attempting login with:', { email, selectedRole });
+      console.log('Attempting login with:', { email, password: '***', selectedRole });
       await login(email, password);
       console.log('Login successful, redirecting...');
       // Redirect will be handled by useEffect when user state updates
