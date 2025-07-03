@@ -93,6 +93,33 @@ export const userApi = {
   }
 };
 
+// Admin API methods (organization-specific)
+export const adminApi = {
+  getOrganizationUsers: async (): Promise<User[]> => {
+    const response = await apiClient.get('/api/admin/users');
+    return response.data;
+  },
+
+  createUser: async (user: Omit<CreateUserRequest, 'organizationId'>): Promise<User> => {
+    const response = await apiClient.post('/api/admin/users', user);
+    return response.data;
+  },
+
+  updateUser: async (id: number, user: UpdateUserRequest): Promise<User> => {
+    const response = await apiClient.put(`/api/admin/users/${id}`, user);
+    return response.data;
+  },
+
+  deleteUser: async (id: number): Promise<void> => {
+    await apiClient.delete(`/api/admin/users/${id}`);
+  },
+
+  resetPassword: async (id: number): Promise<{ temporaryPassword: string }> => {
+    const response = await apiClient.post(`/api/admin/users/${id}/reset-password`);
+    return response.data;
+  }
+};
+
 // Organization API methods
 export const organizationApi = {
   getAll: async (): Promise<Organization[]> => {
