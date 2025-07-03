@@ -52,7 +52,8 @@ public class SecurityConfig {
         configuration.setAllowedOriginPatterns(Arrays.asList(
             "http://localhost:3000",
             "http://localhost:3001",
-            "https://platform.arunabha.in/" // Add your production frontend domain
+            "https://platform.arunabha.in",
+            "https://n844s8s80skwc0k8gso480ck.arunabha.in" // Add your actual backend domain for CORS
         ));
 
         // Allow all HTTP methods
