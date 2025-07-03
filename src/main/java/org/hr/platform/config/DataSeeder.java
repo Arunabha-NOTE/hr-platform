@@ -29,16 +29,21 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void seedData() {
-        // Create default organization if it doesn't exist
-        Organization platformOrg = organizationRepository.findByName("Platform Corp")
-                .orElseGet(() -> {
-                    log.info("Creating default organization: Platform Corp");
-                    Organization org = Organization.builder()
-                            .name("Platform Corp")
-                            .description("Default platform organization")
-                            .build();
-                    return organizationRepository.save(org);
-                });
+        // Create multiple organizations
+        Organization techCorp = createOrganizationIfNotExists(
+            "Tech Corp",
+            "A leading technology company specializing in software solutions"
+        );
+
+        Organization healthPlus = createOrganizationIfNotExists(
+            "Health Plus",
+            "Healthcare services and medical technology provider"
+        );
+
+        Organization eduSystems = createOrganizationIfNotExists(
+            "Edu Systems",
+            "Educational technology and e-learning platform company"
+        );
 
         // Create superadmin in separate SuperAdmin table
         if (!superAdminRepository.findByEmail("superadmin@platform.com").isPresent()) {
@@ -55,20 +60,100 @@ public class DataSeeder implements CommandLineRunner {
             log.info("SuperAdmin created with email: superadmin@platform.com, password: superadmin123");
         }
 
-        // Create default admin as regular user (not SuperAdmin)
-        if (!userRepository.findByEmail("admin@platform.com").isPresent()) {
-            log.info("Creating default admin user in Users table");
-            User admin = User.builder()
-                    .email("admin@platform.com")
-                    .password(passwordEncoder.encode("admin123"))
-                    .role(Role.ADMIN)
-                    .organization(platformOrg)
-                    .firstLogin(false)
-                    .build();
-            userRepository.save(admin);
-            log.info("Admin created with email: admin@platform.com, password: admin123");
-        }
+        // Seed users for Tech Corp
+        createUsersForOrganization(techCorp, "techcorp.com");
+
+        // Seed users for Health Plus
+        createUsersForOrganization(healthPlus, "healthplus.com");
+
+        // Seed users for Edu Systems
+        createUsersForOrganization(eduSystems, "edusystems.com");
 
         log.info("Data seeding completed successfully");
+    }
+
+    private Organization createOrganizationIfNotExists(String name, String description) {
+        return organizationRepository.findByName(name)
+                .orElseGet(() -> {
+                    log.info("Creating organization: {}", name);
+                    Organization org = Organization.builder()
+                            .name(name)
+                            .description(description)
+                            .build();
+                    return organizationRepository.save(org);
+                });
+    }
+
+    private void createUsersForOrganization(Organization organization, String domain) {
+        String orgPrefix = organization.getName().toLowerCase().replace(" ", "");
+
+        // Create Admin for the organization
+        createUserIfNotExists(
+            "admin@" + domain,
+            "admin123",
+            Role.ADMIN,
+            organization,
+            "Admin for " + organization.getName()
+        );
+
+        // Create Manager for the organization
+        createUserIfNotExists(
+            "manager@" + domain,
+            "manager123",
+            Role.MANAGER,
+            organization,
+            "Manager for " + organization.getName()
+        );
+
+        // Create multiple Employees for the organization
+        createUserIfNotExists(
+            "employee1@" + domain,
+            "employee123",
+            Role.EMPLOYEE,
+            organization,
+            "Employee 1 for " + organization.getName()
+        );
+
+        createUserIfNotExists(
+            "employee2@" + domain,
+            "employee123",
+            Role.EMPLOYEE,
+            organization,
+            "Employee 2 for " + organization.getName()
+        );
+
+        createUserIfNotExists(
+            "employee3@" + domain,
+            "employee123",
+            Role.EMPLOYEE,
+            organization,
+            "Employee 3 for " + organization.getName()
+        );
+
+        // Create additional Manager if organization is Tech Corp
+        if ("Tech Corp".equals(organization.getName())) {
+            createUserIfNotExists(
+                "manager2@" + domain,
+                "manager123",
+                Role.MANAGER,
+                organization,
+                "Senior Manager for " + organization.getName()
+            );
+        }
+    }
+
+    private void createUserIfNotExists(String email, String password, Role role, Organization organization, String description) {
+        if (!userRepository.findByEmail(email).isPresent()) {
+            log.info("Creating {} user: {} for organization: {}", role, email, organization.getName());
+            User user = User.builder()
+                    .email(email)
+                    .password(passwordEncoder.encode(password))
+                    .role(role)
+                    .organization(organization)
+                    .firstLogin(false) // Set to false for easier testing, change to true if you want first login flow
+                    .build();
+            userRepository.save(user);
+            log.info("{} created with email: {}, password: {}", role, email, password);
+        }
     }
 }

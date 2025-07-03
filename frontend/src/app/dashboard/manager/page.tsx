@@ -1,41 +1,92 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
 import { RoleProtectedRoute } from '../../../components/RoleProtectedRoute';
 import { Role } from '../../types/enums/enums';
-import { LogOut, UserCheck, Users, Calendar, FileText, Clock, Target, TrendingUp } from 'lucide-react';
+import { LogOut, UserCheck, Users } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+
+// Import the user API to fetch organization users
+import { userApi } from '../../../lib/api';
+
+interface User {
+  id: number;
+  email: string;
+  role: string;
+  firstLogin: boolean;
+  organization?: {
+    id: number;
+    name: string;
+  };
+}
 
 const ManagerDashboard = () => {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [organizationName, setOrganizationName] = useState('');
+
+  useEffect(() => {
+    fetchOrganizationUsers();
+  }, []);
+
+  const fetchOrganizationUsers = async () => {
+    try {
+      setLoading(true);
+      // For now, we'll fetch all users and filter by organization
+      // In a real scenario, you'd have an API endpoint to get users by organization
+      const allUsers = await userApi.getAll();
+
+      // Filter users by the manager's organization
+      // You'll need to get the manager's organization ID from the JWT token or user context
+      const orgUsers = allUsers.filter(u => u.organization?.id === getManagerOrganizationId());
+
+      setUsers(orgUsers);
+
+      // Set organization name from the first user's organization
+      if (orgUsers.length > 0 && orgUsers[0].organization) {
+        setOrganizationName(orgUsers[0].organization.name);
+      }
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+      setError('Failed to load organization users. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Helper function to get manager's organization ID
+  // This should be extracted from the JWT token or user context
+  const getManagerOrganizationId = () => {
+    // TODO: Extract organization ID from JWT token or user context
+    // For now, returning a placeholder - you'll need to implement this based on your auth structure
+    return 1; // Replace with actual organization ID extraction
+  };
 
   const handleLogout = () => {
     logout();
     router.push('/login');
   };
 
-  const stats = [
-    { title: "Team Members", value: "24", icon: Users, trend: "+2%" },
-    { title: "Goals Achieved", value: "18/20", icon: Target, trend: "+10%" },
-    { title: "Leave Requests", value: "5", icon: Calendar, trend: "+1%" },
-    { title: "Team Performance", value: "92%", icon: TrendingUp, trend: "+5%" },
-  ];
-
-  const actionCards = [
-    { title: "Team Overview", description: "View and manage your team members", icon: Users },
-    { title: "Performance Review", description: "Review team performance and set goals", icon: Target },
-    { title: "Leave Management", description: "Approve or decline leave requests", icon: Calendar },
-    { title: "Time Tracking", description: "Track team hours and attendance", icon: Clock },
-    { title: "Reports", description: "Generate team reports and analytics", icon: FileText },
-    { title: "Team Analytics", description: "View team performance metrics", icon: TrendingUp },
-  ];
+  const getRoleBadgeVariant = (role: string) => {
+    switch (role) {
+      case 'ADMIN': return 'secondary';
+      case 'MANAGER': return 'default';
+      case 'EMPLOYEE': return 'outline';
+      default: return 'outline';
+    }
+  };
 
   return (
     <RoleProtectedRoute allowedRoles={[Role.MANAGER]}>
@@ -47,9 +98,11 @@ const ManagerDashboard = () => {
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
                   <UserCheck className="h-8 w-8 text-blue-600" />
-                  <h1 className="text-xl font-bold">Manager Portal</h1>
+                  <h1 className="text-xl font-bold">
+                    Welcome to {organizationName || 'Your Organization'} Portal
+                  </h1>
                 </div>
-                <Badge variant="default">Team Manager</Badge>
+                <Badge variant="default">Manager</Badge>
               </div>
 
               <DropdownMenu>
@@ -66,7 +119,7 @@ const ManagerDashboard = () => {
                   <div className="flex items-center justify-start gap-2 p-2">
                     <div className="flex flex-col space-y-1 leading-none">
                       <p className="font-medium">{user?.sub}</p>
-                      <p className="text-xs text-muted-foreground">Team Manager</p>
+                      <p className="text-xs text-muted-foreground">Manager</p>
                     </div>
                   </div>
                   <DropdownMenuSeparator />
@@ -83,60 +136,77 @@ const ManagerDashboard = () => {
         {/* Main Content */}
         <main className="container mx-auto py-6 px-4 lg:px-8">
           <div className="space-y-8">
-            {/* Page Header */}
-            <div>
-              <h2 className="text-3xl font-bold tracking-tight">Team Management</h2>
-              <p className="text-muted-foreground">
-                Manage your team, track performance, and handle team operations
-              </p>
-            </div>
+            {/* Total Users Card */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Users in Organization</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {loading ? <Skeleton className="h-8 w-16" /> : users.length}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Users in {organizationName || 'your organization'}
+                </p>
+              </CardContent>
+            </Card>
 
-            {/* Stats Grid */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {stats.map((stat, index) => {
-                const IconComponent = stat.icon;
-                return (
-                  <Card key={index}>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                      <IconComponent className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{stat.value}</div>
-                      <p className="text-xs text-muted-foreground">
-                        <span className="text-green-600">{stat.trend}</span> from last month
-                      </p>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+            {/* Users Table */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Organization Users</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {error && (
+                  <Alert className="mb-4">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
 
-            {/* Action Cards */}
-            <div>
-              <h3 className="text-xl font-semibold mb-4">Quick Actions</h3>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {actionCards.map((card, index) => {
-                  const IconComponent = card.icon;
-                  return (
-                    <Card key={index} className="cursor-pointer transition-all hover:shadow-md">
-                      <CardHeader>
-                        <div className="flex items-center space-x-2">
-                          <IconComponent className="h-5 w-5 text-blue-600" />
-                          <CardTitle className="text-lg">{card.title}</CardTitle>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <CardDescription className="mb-4">{card.description}</CardDescription>
-                        <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-600">
-                          Manage →
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </div>
+                {loading ? (
+                  <div className="space-y-2">
+                    {[...Array(5)].map((_, i) => (
+                      <Skeleton key={i} className="h-12 w-full" />
+                    ))}
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Role</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {users.map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell className="font-medium">{user.email}</TableCell>
+                          <TableCell>
+                            <Badge variant={getRoleBadgeVariant(user.role)}>
+                              {user.role.replace('_', ' ')}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={user.firstLogin ? 'outline' : 'default'}>
+                              {user.firstLogin ? 'First Login Required' : 'Active'}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {users.length === 0 && !loading && (
+                        <TableRow>
+                          <TableCell colSpan={3} className="text-center text-muted-foreground">
+                            No users found in your organization
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </main>
       </div>
