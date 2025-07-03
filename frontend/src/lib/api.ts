@@ -20,8 +20,6 @@ apiClient.interceptors.request.use((config) => {
 // User interfaces
 export interface User {
   id: number;
-  firstName: string;
-  lastName: string;
   email: string;
   role: string;
   active: boolean;
@@ -33,8 +31,6 @@ export interface User {
 }
 
 export interface CreateUserRequest {
-  firstName: string;
-  lastName: string;
   email: string;
   password: string;
   role: string;
@@ -42,8 +38,6 @@ export interface CreateUserRequest {
 }
 
 export interface UpdateUserRequest {
-  firstName: string;
-  lastName: string;
   email: string;
   role: string;
   active: boolean;
@@ -54,7 +48,6 @@ export interface Organization {
   id: number;
   name: string;
   description?: string;
-  active: boolean;
   userCount?: number;
 }
 
@@ -66,7 +59,6 @@ export interface CreateOrganizationRequest {
 export interface UpdateOrganizationRequest {
   name: string;
   description?: string;
-  active: boolean;
 }
 
 // User API methods
@@ -140,7 +132,6 @@ export const statsApi = {
       totalUsers: users.length,
       totalOrganizations: organizations.length,
       activeUsers: users.filter(u => u.active).length,
-      activeOrganizations: organizations.filter(o => o.active).length,
     };
   }
 };

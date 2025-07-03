@@ -60,8 +60,7 @@ const OrganizationManagementPage = () => {
   const [selectedOrganization, setSelectedOrganization] = useState<Organization | null>(null);
   const [formData, setFormData] = useState({
     name: '',
-    description: '',
-    active: true
+    description: ''
   });
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -81,7 +80,7 @@ const OrganizationManagementPage = () => {
       // Add user counts to organizations
       const orgsWithUserCounts = orgsData.map(org => ({
         ...org,
-        userCount: usersData.filter(user => user.organization.id === org.id).length
+        userCount: usersData.filter(user => user.organization?.id === org.id).length
       }));
 
       setOrganizations(orgsWithUserCounts);
@@ -132,8 +131,7 @@ const OrganizationManagementPage = () => {
       setError('');
       const updatedOrg = await organizationApi.update(selectedOrganization.id, {
         name: formData.name,
-        description: formData.description,
-        active: formData.active
+        description: formData.description
       });
       setOrganizations(organizations.map(org =>
         org.id === selectedOrganization.id
@@ -174,8 +172,7 @@ const OrganizationManagementPage = () => {
     setSelectedOrganization(organization);
     setFormData({
       name: organization.name,
-      description: organization.description || '',
-      active: organization.active
+      description: organization.description || ''
     });
     setIsEditDialogOpen(true);
   };
@@ -188,8 +185,7 @@ const OrganizationManagementPage = () => {
   const resetForm = () => {
     setFormData({
       name: '',
-      description: '',
-      active: true
+      description: ''
     });
     setError('');
     setSelectedOrganization(null);
@@ -260,7 +256,6 @@ const OrganizationManagementPage = () => {
                       <TableHead>Name</TableHead>
                       <TableHead>Description</TableHead>
                       <TableHead>Users</TableHead>
-                      <TableHead>Status</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -278,11 +273,6 @@ const OrganizationManagementPage = () => {
                             <Users className="h-4 w-4 text-muted-foreground" />
                             <span>{organization.userCount || 0}</span>
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={organization.active ? 'default' : 'secondary'}>
-                            {organization.active ? 'Active' : 'Inactive'}
-                          </Badge>
                         </TableCell>
                         <TableCell className="text-right">
                           <DropdownMenu>
@@ -410,15 +400,6 @@ const OrganizationManagementPage = () => {
                   onChange={(e) => setFormData({...formData, description: e.target.value})}
                   rows={3}
                 />
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="editActive"
-                  checked={formData.active}
-                  onCheckedChange={(checked) => setFormData({...formData, active: checked})}
-                />
-                <Label htmlFor="editActive">Active</Label>
               </div>
             </div>
 

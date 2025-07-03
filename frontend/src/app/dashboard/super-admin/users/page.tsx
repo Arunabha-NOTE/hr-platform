@@ -64,8 +64,6 @@ const UserManagementPage = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
     email: '',
     password: '',
     role: '',
@@ -97,32 +95,44 @@ const UserManagementPage = () => {
   };
 
   const filteredUsers = users.filter(user =>
-    (user.firstName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-    (user.lastName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
     (user.email?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
     (user.organization?.name?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
   const handleAddUser = async () => {
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.role || !formData.organizationId) {
+    if (!formData.email || !formData.password || !formData.role || !formData.organizationId) {
       setError('All fields are required');
+      return;
+    }
+
+    // Additional validation to ensure organizationId is valid
+    if (formData.organizationId === 0) {
+      setError('Please select an organization');
       return;
     }
 
     try {
       setSubmitting(true);
       setError('');
+
+      console.log('Creating user with data:', {
+        email: formData.email,
+        role: formData.role,
+        organizationId: formData.organizationId
+      });
+
       await userApi.create({
-        firstName: formData.firstName,
-        lastName: formData.lastName,
         email: formData.email,
         password: formData.password,
         role: formData.role,
         organizationId: formData.organizationId
       });
+
       setIsAddDialogOpen(false);
       resetForm();
-      await fetchData(); // Reload table data
+
+      // Refetch data to ensure we get the updated user list with organizations
+      await fetchData();
     } catch (error: any) {
       console.error('Error creating user:', error);
       let errorMessage = 'Failed to create user.';
@@ -142,7 +152,7 @@ const UserManagementPage = () => {
   };
 
   const handleEditUser = async () => {
-    if (!selectedUser || !formData.firstName || !formData.lastName || !formData.email || !formData.role) {
+    if (!selectedUser || !formData.email || !formData.role) {
       setError('All fields are required');
       return;
     }
@@ -151,8 +161,6 @@ const UserManagementPage = () => {
       setSubmitting(true);
       setError('');
       await userApi.update(selectedUser.id, {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
         email: formData.email,
         role: formData.role,
         active: formData.active
@@ -197,8 +205,6 @@ const UserManagementPage = () => {
   const openEditDialog = (user: User) => {
     setSelectedUser(user);
     setFormData({
-      firstName: user.firstName || '',
-      lastName: user.lastName || '',
       email: user.email || '',
       password: '', // Always empty for edit
       role: user.role || '',
@@ -215,8 +221,6 @@ const UserManagementPage = () => {
 
   const resetForm = () => {
     setFormData({
-      firstName: '',
-      lastName: '',
       email: '',
       password: '',
       role: '',
@@ -302,7 +306,6 @@ const UserManagementPage = () => {
                       <TableHead>Email</TableHead>
                       <TableHead>Role</TableHead>
                       <TableHead>Organization</TableHead>
-                      <TableHead>Status</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -316,11 +319,6 @@ const UserManagementPage = () => {
                           </Badge>
                         </TableCell>
                         <TableCell>{user.organization?.name || 'No Organization'}</TableCell>
-                        <TableCell>
-                          <Badge variant={user.active ? 'default' : 'secondary'}>
-                            {user.active ? 'Active' : 'Inactive'}
-                          </Badge>
-                        </TableCell>
                         <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -379,25 +377,6 @@ const UserManagementPage = () => {
             )}
 
             <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input
-                    id="firstName"
-                    value={formData.firstName}
-                    onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input
-                    id="lastName"
-                    value={formData.lastName}
-                    onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                  />
-                </div>
-              </div>
-
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -480,25 +459,6 @@ const UserManagementPage = () => {
             )}
 
             <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input
-                    id="firstName"
-                    value={formData.firstName}
-                    onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input
-                    id="lastName"
-                    value={formData.lastName}
-                    onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                  />
-                </div>
-              </div>
-
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -573,7 +533,7 @@ const UserManagementPage = () => {
             <DialogHeader>
               <DialogTitle>Delete User</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete {selectedUser?.firstName} {selectedUser?.lastName}?
+                Are you sure you want to delete {selectedUser?.email}?
                 This action cannot be undone.
               </DialogDescription>
             </DialogHeader>

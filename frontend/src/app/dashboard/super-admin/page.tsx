@@ -39,7 +39,6 @@ const SuperAdminDashboard = () => {
     totalUsers: 0,
     totalOrganizations: 0,
     activeUsers: 0,
-    activeOrganizations: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -74,7 +73,7 @@ const SuperAdminDashboard = () => {
       title: "Total Organizations",
       value: loading ? "..." : stats.totalOrganizations.toString(),
       icon: Globe,
-      description: `${stats.activeOrganizations} active organizations`,
+      description: "",
     },
   ];
 
@@ -149,7 +148,7 @@ const SuperAdminDashboard = () => {
                 System Administration
               </h2>
               <p className="text-muted-foreground">
-                Manage the entire HR platform system, users, and organizations
+                Manage the entire platform system, users, and organizations
               </p>
             </div>
 
